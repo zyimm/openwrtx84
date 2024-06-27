@@ -65,10 +65,10 @@ jobs:
       run: |
         echo $PWD
         mkdir -p ./bin/targets/x86/generic && touch ./bin/targets/x86/generic/dd.txt
-
+        ls $PWD -al
   
     - name: 更新文件
       uses: actions/upload-artifact@v4
       with:
         name: openwrt-x86-64
-        path: ./bin/targets/
+        path: ./openwrt/bin/targets/

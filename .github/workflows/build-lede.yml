@@ -64,7 +64,7 @@ jobs:
         CONFIG_FILE: '.config'
       run: |
         echo $PWD
-        mkdir -p ./bin/targets && touch ./bin/targets/dd.txt
+        mkdir -p ./bin/targets/x86/generic && touch ./bin/targets/x86/generic/dd.txt
 
   
     - name: 更新文件

@@ -74,10 +74,12 @@ jobs:
       env:
         CONFIG_FILE: '.config'
       run: |
+        ls $PWD -al
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
         cd openwrt
         make download -j8
         make -j$(nproc) V=s
+        ls $PWD/bin/targets/
   
     - name: 更新文件
       uses: actions/upload-artifact@v4

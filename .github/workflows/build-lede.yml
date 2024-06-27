@@ -64,6 +64,7 @@ jobs:
         CONFIG_FILE: '.config'
       run: |
         echo $PWD
+        cd openwrt
         mkdir -p ./bin/targets/x86/generic && touch ./bin/targets/x86/generic/dd.txt
         ls $PWD -al
   
@@ -71,4 +72,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: openwrt-x86-64
-        path: ./openwrt/bin/targets/
+        path: ./bin/targets/

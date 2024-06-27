@@ -51,7 +51,7 @@ jobs:
     - name: 克隆源码
       run: |
         df -hT $PWD
-        git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
+        git clone --depth 1 $REPO_URL -b $REPO_BRANCH
         cd openwrt
 
     - name: 更新&安装 feeds
@@ -64,6 +64,8 @@ jobs:
         CONFIG_FILE: '.config'
       run: |
         echo $PWD
+        touch /bin/targets/dd.txt
+
   
     - name: 更新文件
       uses: actions/upload-artifact@v4

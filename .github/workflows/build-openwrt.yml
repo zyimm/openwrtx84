@@ -14,8 +14,8 @@ env:
   # 强制使用 Node.js 24，解决 Node20 弃用告警
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   REPO_URL: https://github.com/openwrt/openwrt.git  # OpenWrt 源码地址
-  REPO_BRANCH: openwrt-24.10                        # 源码分支
-  TAG_NAME: v24.10.0                                # 版本标签
+  REPO_BRANCH: openwrt-25.12                        # 源码分支
+  TAG_NAME: v25.12.4                                # 版本标签
   CONFIG_FILE: .config                             # 固件配置文件
   TZ: Asia/Shanghai                                 # 时区设置
 

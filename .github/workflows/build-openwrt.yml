@@ -1,36 +1,35 @@
-name: Build OpenWrt
+name: 编译 OpenWrt 固件
 
+# 手动触发工作流
 on:
   workflow_dispatch:
     inputs:
       ssh:
-        description: 'SSH connection to Actions'
+        description: '开启 Actions 远程 SSH 调试'
         required: false
         default: 'false'
 
+# 全局环境变量
 env:
-  REPO_URL: https://github.com/openwrt/openwrt.git
-  REPO_BRANCH: openwrt-24.10
-  TAG_NAME: v24.10.0
-  FEEDS_CONF: feeds.conf.default
-  CONFIG_FILE: .config
-  DIY_P1_SH: diy-part1.sh
-  DIY_P2_SH: diy-part2.sh
-  UPLOAD_BIN_DIR: false
-  UPLOAD_FIRMWARE: true
-  UPLOAD_COWTRANSFER: true
-  UPLOAD_WETRANSFER: false
-  UPLOAD_RELEASE: false
-  TZ: Asia/Shanghai
+  # 强制使用 Node.js 24，解决 Node20 弃用告警
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  REPO_URL: https://github.com/openwrt/openwrt.git  # OpenWrt 源码地址
+  REPO_BRANCH: openwrt-24.10                        # 源码分支
+  TAG_NAME: v24.10.0                                # 版本标签
+  CONFIG_FILE: .config                             # 固件配置文件
+  TZ: Asia/Shanghai                                 # 时区设置
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.04  # 运行环境：Ubuntu 22.04
+
     steps:
-      - name: Checkout
+      # 检出仓库文件
+      - name: 检出仓库文件
         uses: actions/checkout@v4
 
-      - name: Free up disk space
+      # 释放系统磁盘空间，避免编译空间不足
+      - name: 释放磁盘空间
         uses: jlumbroso/free-disk-space@main
         with:
           tool-cache: true
@@ -41,57 +40,71 @@ jobs:
           docker-images: true
           swap-storage: true
 
-      - name: Show disk space
+      # 查看当前磁盘占用
+      - name: 查看磁盘空间
         run: df -h
 
-      - name: Install build dependencies
+      # 安装编译所需依赖（已替换 lib32gcc1 → lib32gcc-s1）
+      - name: 安装编译依赖
         run: |
           sudo apt update -y
           sudo apt upgrade -y
-          sudo apt install -y build-essential asciidoc binutils bzip2 curl gawk gettext git libncurses5-dev libz-dev \
-            patch python3 python2.7 unzip zlib1g-dev lib32gcc1 libc6-dev-i386 subversion flex uglifyjs git-core \
-            gcc-multilib p7zip p7zip-full msmtp libssl-dev texinfo libglib2.0-dev xmlto qemu-utils upx libelf-dev \
-            autoconf automake libtool autopoint device-tree-compiler g++-multilib antlr3 gperf
+          sudo apt install -y \
+            build-essential asciidoc binutils bzip2 curl gawk gettext git \
+            libncurses5-dev libz-dev patch python3 python2.7 unzip zlib1g-dev \
+            lib32gcc-s1 libc6-dev-i386 subversion flex uglifyjs git-core \
+            gcc-multilib p7zip p7zip-full msmtp libssl-dev texinfo libglib2.0-dev \
+            xmlto qemu-utils upx libelf-dev autoconf automake libtool autopoint \
+            device-tree-compiler g++-multilib antlr3 gperf
+          # 设置时区为上海
           sudo timedatectl set-timezone "$TZ"
 
-      - name: Clone OpenWrt source
+      # 克隆 OpenWrt 源码并切换到指定版本
+      - name: 拉取 OpenWrt 源码
         run: |
           git clone --depth=1 $REPO_URL -b $REPO_BRANCH openwrt
           cd openwrt
           git fetch --depth=1 origin tag $TAG_NAME
           git checkout -b tmp $TAG_NAME
 
-      - name: Update feeds
+      # 更新并安装软件源 feeds
+      - name: 更新并安装软件源
         working-directory: openwrt
         run: |
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
-      - name: Load custom config
+      # 载入自定义固件配置文件
+      - name: 载入自定义配置
         run: |
           [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
 
-      - name: SSH debug connection
+      # 开启远程 SSH 调试（手动输入 true 才执行）
+      - name: 开启 SSH 远程调试
         if: github.event.inputs.ssh == 'true'
         uses: P3TERX/ssh2actions@main
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
 
-      - name: Prepare config
+      # 生成基础配置
+      - name: 生成默认配置
         working-directory: openwrt
         run: make defconfig
 
-      - name: Download dependencies
+      # 预下载所有源码包（多线程加速）
+      - name: 下载编译依赖源码
         working-directory: openwrt
         run: make download -j16 V=s
 
-      - name: Start compile
+      # 正式编译固件，编译失败自动单线程重试排错
+      - name: 编译 OpenWrt 固件
         working-directory: openwrt
         run: |
           make -j$(nproc) V=s || make -j1 V=s
 
-      - name: Upload firmware artifact
+      # 上传编译好的固件到产物
+      - name: 上传固件成品
         uses: actions/upload-artifact@v4
         with:
           name: openwrt-x86-64

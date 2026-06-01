@@ -78,15 +78,7 @@ jobs:
       - name: 载入自定义配置
         run: |
           [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
-
-      # 开启远程 SSH 调试（手动输入 true 才执行）
-      - name: 开启 SSH 远程调试
-        if: github.event.inputs.ssh == 'true'
-        uses: P3TERX/ssh2actions@main
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-
+          
       # 生成基础配置
       - name: 生成默认配置
         working-directory: openwrt
